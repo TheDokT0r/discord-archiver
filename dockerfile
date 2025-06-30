@@ -1,6 +1,7 @@
 FROM oven/bun:latest AS build
 WORKDIR /app
 COPY . .
+RUN bun i --frozen-lockfile
 RUN bun build --compile --outfile=/build ./index.ts
 
 FROM archlinux:latest
@@ -34,7 +35,7 @@ RUN yay -Scc --noconfirm || true
 USER root
 
 WORKDIR /app
-COPY --from=build /app/build /usr/local/bin/archiver
+COPY --from=build /build /usr/local/bin/archiver
 ENV GUILD_ID=id
 ENV TOKEN=token
 ENV TIME_INTERVAL=5
