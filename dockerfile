@@ -1,43 +1,32 @@
 FROM oven/bun:latest AS build
+
 WORKDIR /app
 COPY . .
 RUN bun i --frozen-lockfile
-RUN bun build --compile --outfile=/build ./index.ts
+RUN bun build --compile --outfile=/build/scheduler ./index.ts
 
-FROM archlinux:latest
+FROM debian:latest
 
-# Set environment to noninteractive
-ENV TERM xterm
+RUN apt update && apt install curl unzip -y
 
-# Update and install base dependencies
-RUN pacman -Syu --noconfirm \
-    && pacman -S --noconfirm base-devel git sudo glibc
+RUN curl -L -o /discord-chat-exporter.zip \
+    https://github.com/Tyrrrz/DiscordChatExporter/releases/download/2.46/DiscordChatExporter.Cli.linux-x64.zip
 
-# Create a non-root user for building AUR packages
-RUN useradd -m auruser \
-    && echo "auruser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+RUN mkdir -p /opt/discord-chat-exporter \
+    && unzip /discord-chat-exporter.zip -d /opt/discord-chat-exporter \
+    && rm /discord-chat-exporter.zip
 
-USER auruser
-WORKDIR /home/auruser
+RUN ln -s /opt/discord-chat-exporter/DiscordChatExporter.Cli /usr/local/bin/discord-chat-exporter-cli
 
-# Clone yay (AUR helper) and install it
-RUN git clone https://aur.archlinux.org/yay.git \
-    && cd yay \
-    && makepkg -si --noconfirm
+COPY --from=build /build/scheduler /usr/local/bin/scheduler
 
-# Example: Install an AUR package using yay (replace 'package-name' as needed)
-RUN yay -S --noconfirm discord-chat-exporter-cli
+RUN chmod +x /usr/local/bin/scheduler
 
-# Clean up
-RUN yay -Scc --noconfirm || true
-
-# Set back to root for any final steps if needed
-USER root
-
-WORKDIR /app
-COPY --from=build /build /usr/local/bin/archiver
+ENV PATH="/opt/discord-chat-exporter:${PATH}"
 ENV GUILD_ID=id
 ENV TOKEN=token
 ENV TIME_INTERVAL=5
 ENV OUT_DIR=/archive/
-CMD [ "archiver" ]
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+
+CMD ["scheduler"]

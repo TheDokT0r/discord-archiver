@@ -1,0 +1,10 @@
+services:
+  discord-exporter:
+    container_name: discord-exporter
+    build: .
+    environment:
+      - GUILD_ID=$GUILD_ID
+      - TOKEN=$TOKEN
+    volumes:
+      - ./dist/:/archive/
+      - ./media/:/media/
