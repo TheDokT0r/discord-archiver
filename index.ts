@@ -35,7 +35,7 @@ async function exportGuild() {
     await $`mkdir -p ${currentArchivePath}`;
 
     const response =
-      await $`discord-chat-exporter-cli exportguild -t ${TOKEN} -g ${GUILD_ID} --include-vc false --media reuse-media --output ${currentArchivePath}`.text();
+      await $`discord-chat-exporter-cli exportguild -t ${TOKEN} -g ${GUILD_ID} --include-vc false --media --reuse-media --output ${currentArchivePath}`.text();
     console.log(response);
   } catch (e) {
     console.error(e);

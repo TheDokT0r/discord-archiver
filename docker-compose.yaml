@@ -7,4 +7,3 @@ services:
       - TOKEN=$TOKEN
     volumes:
       - ./dist/:/archive/
-      - ./media/:/media/
